@@ -1,0 +1,56 @@
+<modification>
+	<id>Most Popular By Category</id>
+	<version>1.1</version>
+	<vqmver>2.4.1</vqmver>
+	<author>www.rinz.com.ua</author>
+	
+	<file name="catalog/model/catalog/product.php">
+        <operation>
+            <search position="replace" error="log"><![CDATA[
+				'p.date_added'
+            ]]></search>
+            <add><![CDATA[
+				'p.date_added',
+				'p.viewed'
+            ]]></add>
+        </operation>
+		<operation>
+            <search position="before" error="log"><![CDATA[
+				public function getProductSpecials($data = array()) {
+            ]]></search>
+            <add><![CDATA[
+				public function getPurchased($data = array()) {
+		$sql = " SELECT op.product_id FROM " . DB_PREFIX . "order_product AS op ";
+		
+		if (!empty($data['filter_category_id'])) {
+			$sql .= " LEFT JOIN " . DB_PREFIX . "product_to_category AS p2c ON op.product_id=p2c.product_id WHERE category_id = " . (int)$data['filter_category_id'] . "";
+			}
+			
+		if (isset($data['start']) || isset($data['limit'])) {
+			if ($data['start'] < 0) {
+				$data['start'] = 0;
+			}			
+
+			if ($data['limit'] < 1) {
+				$data['limit'] = 20;
+			}	
+			
+			$sql .= " LIMIT " . (int)$data['start'] . "," . (int)$data['limit'];
+		}
+		
+		
+		
+	$product_data = array();
+		
+		$query = $this->db->query($sql);
+		
+		foreach ($query->rows as $result) { 		
+			$product_data[$result['product_id']] = $this->getProduct($result['product_id']);
+		}
+		
+		return $product_data;
+	}
+            ]]></add>
+        </operation>
+	</file>
+</modification>
